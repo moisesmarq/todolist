@@ -43,4 +43,7 @@ public class TaskModel {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    public void setIdUser(UUID idUser){
+        this.idUser = idUser;
+    }
 }
