@@ -32,46 +32,51 @@ public class FilterTaskAuth extends OncePerRequestFilter {
         //Validar usuario
         //Validar senha
         //Se sucesso, segue a vida
-
-        //Pega a autenticação
-        var authorization = request.getHeader("Authorization");
-        System.out.println(authorization);
-
-        //Remove a palavra "Basic"
-        var authEncoded = authorization.substring("Basic".length()).trim();
+            
+        var servletPath = request.getServletPath();
         
-        //Decodifica a informação de credenciais
-        Base64.getDecoder().decode(authEncoded);
-        byte[] authDecode = Base64.getDecoder().decode(authEncoded);
+        if (servletPath.equals("/tasks/")) {
+            //Pega a autenticação
+            var authorization = request.getHeader("Authorization");
+            System.out.println(authorization);
 
-        var authString = new String(authDecode);
+            //Remove a palavra "Basic"
+            var authEncoded = authorization.substring("Basic".length()).trim();
+            
+            //Decodifica a informação de credenciais
+            Base64.getDecoder().decode(authEncoded);
+            byte[] authDecode = Base64.getDecoder().decode(authEncoded);
 
-        String[] credentials = authString.split(":");
+            var authString = new String(authDecode);
 
-        String username = credentials[0];
-        String password = credentials[1];
-        
-        //Validacao do usuario
-        var user = this.userRepository.findByUsername(username);
-        if (user == null)
-        {
-           response.sendError(401);
-        }
-        else
-        {
-            //Validacao da senha
-            var passwordVerify = BCrypt.verifyer().verify(password.toCharArray(), user.getPassword());
-           
-            if(passwordVerify.verified)
+            String[] credentials = authString.split(":");
+
+            String username = credentials[0];
+            String password = credentials[1];
+            
+            //Validacao do usuario
+            var user = this.userRepository.findByUsername(username);
+            if (user == null)
             {
-                filterChain.doFilter(request, response);
+            response.sendError(401);
             }
             else
             {
-                response.sendError(401);
+                //Validacao da senha
+                var passwordVerify = BCrypt.verifyer().verify(password.toCharArray(), user.getPassword());
+            
+                if(passwordVerify.verified)
+                {
+                    filterChain.doFilter(request, response);
+                }
+                else
+                {
+                    response.sendError(401);
+                }
             }
-            
-            
+        } 
+        else {
+            filterChain.doFilter(request, response);
         }
-    }
+    }    
 }
